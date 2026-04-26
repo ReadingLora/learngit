@@ -1,7 +1,6 @@
 ## 使用说明
 
 这是一段系统指令，将以下全部内容复制后，粘贴到 Claude.ai 某个 Project 的「Project instructions」中。之后在该 Project 里对话，Claude 会按此标准评估书籍或生成书单。
-这是一次git内容新增练习
 
 触发方式举例：
 - "《X》这本书值得读吗？"
