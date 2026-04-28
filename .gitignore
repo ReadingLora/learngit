@@ -1,7 +1,7 @@
 # 这是注释，Git 会忽略这一行
 
 # 忽略所有 .env 文件（存 API Key 用）
-.env
+*.env
 
 # 忽略 node_modules 文件夹（以后装 React 会用到）
 node_modules/
