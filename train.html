@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Hello, Lora</title>
+</head>
+<body>
+  <h1>Hello, Lora</h1>
+  <button id="btn" type="button">点击后：显示欢迎语</button>
+  <p id="msg">（点击按钮后显示内容）</p>
+  <script>
+    const btn = document.getElementById('btn');
+    const msg = document.getElementById('msg');
+
+    btn.addEventListener('click', () => {
+      msg.textContent = '你好啊！欢迎来到罗拉的阅读漫步！';
+      btn.textContent = '已点击！再点也没关系';
+    });
+  </script>
+</body>
+</html>
