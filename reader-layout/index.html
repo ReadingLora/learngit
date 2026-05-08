@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>阅读器布局 · MVP2</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-topbar" role="banner">
+    <div class="app-topbar__left">
+      <span class="app-topbar__icon-slot" title="回首页（占位）">⌂</span>
+      <nav class="app-topbar__tabs" aria-label="书籍标签（占位）">
+        <span class="app-topbar__tab app-topbar__tab--active">占位书名 A</span>
+        <span class="app-topbar__tab">占位书名 B …</span>
+      </nav>
+    </div>
+    <div class="app-topbar__right">
+      <span class="app-topbar__icon-slot" title="通知（占位）">铃</span>
+      <button
+        type="button"
+        class="topbar-icon-btn topbar-notes-toggle"
+        id="btnNotesToggle"
+        aria-expanded="true"
+        aria-controls="notesPanel"
+        aria-label="收起笔记区"
+        title="切换笔记侧栏"
+      >
+        <svg class="notes-toggle-svg" viewBox="0 0 18 18" width="18" height="18" aria-hidden="true">
+          <rect class="notes-toggle-frame" x="2.25" y="2.25" width="13.5" height="13.5" rx="1.75" />
+          <rect class="notes-toggle-bar" x="11.25" y="3.75" width="3.75" height="10.5" rx="0.45" />
+        </svg>
+      </button>
+      <span class="app-topbar__win" aria-hidden="true">
+        <span class="app-topbar__icon-slot app-topbar__icon-slot--win" title="最小化（占位）">—</span>
+        <span class="app-topbar__icon-slot app-topbar__icon-slot--win" title="最大化（占位）">□</span>
+        <span class="app-topbar__icon-slot app-topbar__icon-slot--win app-topbar__icon-slot--close" title="关闭（占位）">×</span>
+      </span>
+    </div>
+  </header>
+
+  <div class="reader-shell" id="readerShell">
+    <section class="panel panel--reader" id="panelReader" aria-label="阅读区">
+      <header class="panel__toolbar">
+        <div class="toolbar__icons" aria-hidden="true">
+          <span class="toolbar__icon-slot">≡</span>
+          <span class="toolbar__icon-slot">目</span>
+        </div>
+        <span class="toolbar__title">占位章节标题</span>
+        <div class="toolbar__actions">
+          <span class="toolbar__icon-slot">搜</span>
+          <span class="toolbar__icon-slot">设</span>
+        </div>
+      </header>
+      <div class="panel__body">
+        <p>这里是<strong>阅读区</strong>占位正文。整页用 Flexbox 分成三栏，本栏 flex 比例为 4，对应约 40% 宽度。</p>
+        <p>样式参考 sageread：暖色纸感背景、衬线正文区域。后续可换成真实章节 HTML 或 iframe。</p>
+      </div>
+      <footer class="panel__footer">Page 1 / 412（占位）</footer>
+    </section>
+
+    <div
+      class="split-gutter"
+      id="gutterReaderAi"
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="拖动调整阅读区与 AI 区宽度"
+      title="拖动调整阅读区与 AI 区宽度"
+    ></div>
+
+    <section class="panel panel--ai" id="panelAi" aria-label="AI 问答区">
+      <header class="panel__toolbar">
+        <span class="ai-model-badge">模型 ▾</span>
+        <span class="toolbar__title toolbar__title--muted">deepseek-chat（占位）</span>
+        <div class="toolbar__actions">
+          <span class="toolbar__icon-slot">↻</span>
+          <span class="toolbar__icon-slot">⛶</span>
+        </div>
+      </header>
+      <div class="ai-chat">
+        <p><strong>AI 阅读助手</strong>（占位）</p>
+        <p>这里是会话历史区域。下方是快捷操作与输入框骨架，与参考图布局类似。</p>
+      </div>
+      <div class="ai-quick-row">
+        <span class="ai-pill">总结本章</span>
+        <span class="ai-pill">知识图谱</span>
+        <span class="ai-pill">笔记整理</span>
+        <span class="ai-pill">阅读导航</span>
+      </div>
+      <div class="ai-input-row">
+        <span class="toolbar__icon-slot ai-input-row__clip">📎</span>
+        <div class="ai-input-fake">向 AI 提问…（占位）</div>
+        <div class="ai-send-fake" title="发送（占位）"></div>
+      </div>
+    </section>
+
+    <div
+      class="split-gutter"
+      id="gutterAiNotes"
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="拖动调整 AI 区与笔记区宽度"
+      title="拖动调整 AI 区与笔记区宽度"
+    ></div>
+
+    <section class="panel panel--notes" id="notesPanel" aria-label="笔记区">
+      <header class="panel__toolbar">
+        <span class="toolbar__title toolbar__title--left">笔记</span>
+      </header>
+      <div class="panel__body">
+        <p>这里是<strong>笔记区</strong>占位。侧栏开关在<strong>全局顶栏右侧</strong>（Obsidian 式：竖条宽窄表示展开 / 收起）。</p>
+        <p><strong>MVP2</strong>：阅读区与 AI、AI 与笔记之间的竖条可拖动改宽。</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      var GUTTER = 6;
+      var MIN_R = 200;
+      var MIN_A = 180;
+      var MIN_N = 180;
+
+      var body = document.body;
+      var shell = document.getElementById("readerShell");
+      var elReader = document.getElementById("panelReader");
+      var elAi = document.getElementById("panelAi");
+      var elNotes = document.getElementById("notesPanel");
+      var g0 = document.getElementById("gutterReaderAi");
+      var g1 = document.getElementById("gutterAiNotes");
+      var btn = document.getElementById("btnNotesToggle");
+
+      var f = [0.4, 0.3, 0.3];
+      var drag = null;
+
+      function notesCollapsed() {
+        return body.classList.contains("notes-collapsed");
+      }
+
+      function clamp(v, lo, hi) {
+        return Math.min(hi, Math.max(lo, v));
+      }
+
+      function usableWidth() {
+        if (!shell) return 0;
+        var g = notesCollapsed() ? 1 : 2;
+        return Math.max(0, shell.clientWidth - g * GUTTER);
+      }
+
+      function layoutExpanded(u) {
+        var s = f[0] + f[1] + f[2];
+        if (s <= 0) s = 1;
+        var wR = (u * f[0]) / s;
+        var wA = (u * f[1]) / s;
+        var wN = (u * f[2]) / s;
+        wR = clamp(wR, MIN_R, u - MIN_A - MIN_N);
+        wN = clamp(wN, MIN_N, u - MIN_R - MIN_A);
+        wA = u - wR - wN;
+        if (wA < MIN_A) {
+          wA = MIN_A;
+          var rem = u - wA;
+          var sumRF = f[0] + f[2];
+          var r = sumRF > 0 ? f[0] / sumRF : 0.5;
+          wR = rem * r;
+          wN = rem - wR;
+          wR = clamp(wR, MIN_R, rem - MIN_N);
+          wN = rem - wR;
+        }
+        f[0] = wR / u;
+        f[1] = wA / u;
+        f[2] = wN / u;
+        elReader.style.flex = "0 0 " + wR + "px";
+        elAi.style.flex = "0 0 " + wA + "px";
+        elNotes.style.flex = "0 0 " + wN + "px";
+        elNotes.style.minWidth = "";
+      }
+
+      function layout() {
+        if (!shell || !elReader || !elAi || !elNotes) return;
+        var u = usableWidth();
+        if (u <= 0) return;
+
+        if (g0) g0.style.flex = "0 0 " + GUTTER + "px";
+
+        if (notesCollapsed()) {
+          if (g1) {
+            g1.style.display = "none";
+            g1.style.flex = "0 0 0px";
+          }
+          elNotes.style.minWidth = "0";
+          var sum = f[0] + f[1];
+          var fr = sum > 0 ? f[0] / sum : 4 / 7;
+          var wR = u * fr;
+          var wA = u - wR;
+          wR = clamp(wR, MIN_R, u - MIN_A);
+          wA = u - wR;
+          f[0] = wR / u;
+          f[1] = wA / u;
+          elReader.style.flex = "0 0 " + wR + "px";
+          elAi.style.flex = "0 0 " + wA + "px";
+          elNotes.style.flex = "0 0 0px";
+        } else {
+          if (g1) g1.style.display = "";
+          if (g1) g1.style.flex = "0 0 " + GUTTER + "px";
+          layoutExpanded(u);
+        }
+      }
+
+      function setCollapsed(collapsed) {
+        body.classList.toggle("notes-collapsed", collapsed);
+        if (btn) {
+          btn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+          btn.setAttribute("aria-label", collapsed ? "展开笔记区" : "收起笔记区");
+          btn.title = collapsed ? "展开笔记侧栏" : "收起笔记侧栏";
+        }
+        layout();
+      }
+
+      function startDrag(which, e) {
+        if (which === 1 && notesCollapsed()) return;
+        e.preventDefault();
+        var u = usableWidth();
+        var wR = elReader.getBoundingClientRect().width;
+        var wA = elAi.getBoundingClientRect().width;
+        var wN = notesCollapsed() ? 0 : elNotes.getBoundingClientRect().width;
+        drag = {
+          which: which,
+          startX: e.clientX,
+          u: u,
+          collapsed: notesCollapsed(),
+          wR: wR,
+          wA: wA,
+          wN: wN
+        };
+        body.classList.add("is-resizing");
+      }
+
+      function onMove(e) {
+        if (!drag) return;
+        var dx = e.clientX - drag.startX;
+        var u = usableWidth();
+
+        if (drag.collapsed) {
+          var wR = drag.wR + dx;
+          wR = clamp(wR, MIN_R, u - MIN_A);
+          var wA = u - wR;
+          f[0] = wR / u;
+          f[1] = wA / u;
+          elReader.style.flex = "0 0 " + wR + "px";
+          elAi.style.flex = "0 0 " + wA + "px";
+        } else if (drag.which === 0) {
+          var wR2 = drag.wR + dx;
+          wR2 = clamp(wR2, MIN_R, u - MIN_A - drag.wN);
+          var wA2 = u - drag.wN - wR2;
+          f[0] = wR2 / u;
+          f[1] = wA2 / u;
+          f[2] = drag.wN / u;
+          elReader.style.flex = "0 0 " + wR2 + "px";
+          elAi.style.flex = "0 0 " + wA2 + "px";
+          elNotes.style.flex = "0 0 " + drag.wN + "px";
+        } else {
+          var wA3 = drag.wA + dx;
+          wA3 = clamp(wA3, MIN_A, u - drag.wR - MIN_N);
+          var wN3 = u - drag.wR - wA3;
+          f[0] = drag.wR / u;
+          f[1] = wA3 / u;
+          f[2] = wN3 / u;
+          elReader.style.flex = "0 0 " + drag.wR + "px";
+          elAi.style.flex = "0 0 " + wA3 + "px";
+          elNotes.style.flex = "0 0 " + wN3 + "px";
+        }
+      }
+
+      function endDrag() {
+        if (!drag) return;
+        drag = null;
+        body.classList.remove("is-resizing");
+        layout();
+      }
+
+      if (btn) {
+        btn.addEventListener("click", function () {
+          setCollapsed(!notesCollapsed());
+        });
+      }
+
+      if (g0) g0.addEventListener("mousedown", function (e) {
+        startDrag(0, e);
+      });
+      if (g1) {
+        g1.addEventListener("mousedown", function (e) {
+          startDrag(1, e);
+        });
+      }
+
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", endDrag);
+      window.addEventListener("resize", layout);
+
+      layout();
+    })();
+  </script>
+</body>
+</html>
