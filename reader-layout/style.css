@@ -152,21 +152,30 @@ body.notes-collapsed .topbar-notes-toggle .notes-toggle-bar {
   flex: 1;
   min-height: 0;
   overflow: hidden;
+  /* 与分栏同色底，避免透明 gutter 透出 body 的灰底（看起来像线两侧阴影） */
+  background-color: #fff;
 }
 
+/* 视觉 1px 发丝线（#e0e0e0），中间落笔；左右留空保证约 6px 命中区，与脚本 GUTTER 一致 */
 .split-gutter {
   flex: 0 0 6px;
   flex-shrink: 0;
   align-self: stretch;
+  position: relative;
   cursor: col-resize;
-  background: #d5d3cd;
-  box-shadow:
-    inset 1px 0 0 rgba(255, 255, 255, 0.45),
-    inset -1px 0 0 rgba(0, 0, 0, 0.06);
+  background: transparent;
 }
 
-.split-gutter:hover {
-  background: #c4c2bb;
+.split-gutter::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  transform: translateX(-0.5px);
+  background: #e0e0e0;
+  pointer-events: none;
 }
 
 body.is-resizing {
