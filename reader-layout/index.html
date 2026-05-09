@@ -81,11 +81,31 @@
         <p><strong>AI 阅读助手</strong>（占位）</p>
         <p>这里是会话历史区域。下方是快捷操作与输入框骨架，与参考图布局类似。</p>
       </div>
+      <div class="ai-mock-answer" id="aiMockAnswerWrap" aria-label="模拟 AI 回答">
+        <label class="ai-mock-answer__label" for="aiMockAnswer">模拟 AI 回答（粘贴测试）</label>
+        <textarea
+          id="aiMockAnswer"
+          class="ai-mock-answer__textarea"
+          rows="6"
+          placeholder="在此粘贴或输入模拟的 AI 回答…"
+          spellcheck="false"
+        ></textarea>
+        <div class="ai-mock-answer__status" id="aiSyncBadge" hidden>已同步到笔记</div>
+        <div class="ai-mock-actions" id="aiMockActions" hidden>
+          <div class="ai-mock-actions__icons" aria-hidden="true">
+            <span class="toolbar__icon-slot ai-mock-actions__icon" title="复制（占位）">⎘</span>
+            <span class="toolbar__icon-slot ai-mock-actions__icon" title="赞（占位）">▲</span>
+            <span class="toolbar__icon-slot ai-mock-actions__icon" title="踩（占位）">▼</span>
+          </div>
+          <button type="button" class="ai-mock-actions__add" id="btnAddNote">加入笔记</button>
+          <span class="ai-mock-hint" id="aiMockHint" role="status" aria-live="polite"></span>
+        </div>
+      </div>
       <div class="ai-quick-row">
-        <span class="ai-pill">总结本章</span>
-        <span class="ai-pill">知识图谱</span>
+        <span class="ai-pill">读前定位卡</span>
+        <span class="ai-pill">阅读助手</span>
         <span class="ai-pill">笔记整理</span>
-        <span class="ai-pill">阅读导航</span>
+        <span class="ai-pill">写作对齐</span>
       </div>
       <div class="ai-input-row">
         <span class="toolbar__icon-slot ai-input-row__clip">📎</span>
@@ -107,9 +127,8 @@
       <header class="panel__toolbar">
         <span class="toolbar__title toolbar__title--left">笔记</span>
       </header>
-      <div class="panel__body">
-        <p>这里是<strong>笔记区</strong>占位。侧栏开关在<strong>全局顶栏右侧</strong>（Obsidian 式：竖条宽窄表示展开 / 收起）。</p>
-        <p><strong>MVP2</strong>：阅读区与 AI、AI 与笔记之间的竖条可拖动改宽。</p>
+      <div class="panel__body panel__body--notes">
+        <div id="notesList" class="notes-list" aria-label="笔记列表"></div>
       </div>
     </section>
   </div>
@@ -300,5 +319,6 @@
       layout();
     })();
   </script>
+  <script src="script.js"></script>
 </body>
 </html>

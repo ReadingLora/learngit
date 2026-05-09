@@ -321,6 +321,212 @@ body.is-resizing {
   color: #333;
 }
 
+/* 模拟 AI 回答 + 加入笔记 */
+.ai-mock-answer {
+  flex-shrink: 0;
+  padding: 10px 12px 12px;
+  border-top: 1px solid #eee;
+  background: #fcfcfc;
+}
+
+.ai-mock-answer__label {
+  display: block;
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 6px;
+}
+
+.ai-mock-answer__textarea {
+  display: block;
+  width: 100%;
+  min-height: 120px;
+  resize: vertical;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #222;
+  border: 1px solid #d8d8d8;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.ai-mock-answer__textarea:focus {
+  outline: none;
+  border-color: #a8a8a8;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.04);
+}
+
+.ai-mock-answer__status {
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #2d6a4f;
+}
+
+.ai-mock-answer--synced .ai-mock-answer__textarea {
+  background: #f4faf6;
+  border-color: #b7d4c2;
+}
+
+.ai-mock-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin-top: 10px;
+}
+
+.ai-mock-actions__icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ai-mock-actions__icon {
+  width: 28px;
+  height: 28px;
+  font-size: 11px;
+}
+
+.ai-mock-actions__add {
+  margin-left: auto;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: #3d5a80;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.ai-mock-actions__add:hover {
+  background: #354f6e;
+}
+
+.ai-mock-actions__add:focus-visible {
+  outline: 2px solid #3d5a80;
+  outline-offset: 2px;
+}
+
+.ai-mock-hint {
+  flex-basis: 100%;
+  font-size: 12px;
+  color: #b45309;
+  min-height: 1.2em;
+}
+
+.panel__body--notes {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 14px;
+}
+
+.notes-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.notes-list__empty {
+  margin: 0;
+  font-size: 13px;
+  color: #888;
+  line-height: 1.5;
+}
+
+.note-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.note-card__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 12px;
+  text-align: left;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #222;
+  background: #fafafa;
+  border: none;
+  cursor: pointer;
+}
+
+/*
+ * 折叠箭头：与标题同色 #222，与笔记区整体一致。
+ * 几何：先画「向下」的等边三角（底 = 2×腰边），再旋转为向右，展开时再转回向下，形状一致。
+ */
+.note-card__chevron {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  color: #222;
+}
+
+.note-card__chevron::before {
+  content: "";
+  display: block;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  /* 向下等边三角：底 8px（左右各 4px），高 = 4√3 px */
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: calc(4px * 1.732050808) solid currentColor;
+  border-bottom: 0;
+  /* 收起 = 指向右 */
+  transform: rotate(-90deg);
+  transform-origin: center;
+}
+
+.note-card--expanded .note-card__chevron::before {
+  transform: rotate(0deg);
+}
+
+.note-card__title-text {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  font-weight: 600;
+}
+
+.note-card__head:hover {
+  background: #f0f0f0;
+}
+
+.note-card__head:focus-visible {
+  outline: 2px solid #3d5a80;
+  outline-offset: -2px;
+}
+
+.note-card__body {
+  padding: 10px 12px 12px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #333;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border-top: 1px solid #eee;
+}
+
 .ai-quick-row {
   flex-shrink: 0;
   display: flex;
