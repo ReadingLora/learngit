@@ -52,47 +52,10 @@
         <button type="button" class="shelf-main__add" disabled title="占位">+ 添加书籍</button>
       </header>
 
-      <div class="shelf-grid">
-        <a class="shelf-book-card" href="index.html?book=jzs">
-          <h2 class="shelf-book-card__title">置身事内：中国政府与经济发展</h2>
-          <div class="shelf-book-card__cover-wrap">
-            <img class="shelf-book-card__cover" src="../book-card/cover.jpg" alt="《置身事内》封面" width="280" height="420">
-          </div>
-          <footer class="shelf-book-card__footer">
-            <div class="shelf-book-card__progress-track" aria-hidden="true">
-              <div class="shelf-book-card__progress-fill" style="width: 70%"></div>
-            </div>
-            <span class="shelf-book-card__progress-label">70%</span>
-          </footer>
-        </a>
-
-        <a class="shelf-book-card" href="index.html?book=fan">
-          <h2 class="shelf-book-card__title">反脆弱：从不确定性中获益</h2>
-          <div class="shelf-book-card__cover-wrap">
-            <img class="shelf-book-card__cover" src="../book-card/%E3%80%8A%E5%8F%8D%E8%84%86%E5%BC%B1%E3%80%8B.jpg" alt="《反脆弱》封面" width="280" height="420">
-          </div>
-          <footer class="shelf-book-card__footer">
-            <div class="shelf-book-card__progress-track" aria-hidden="true">
-              <div class="shelf-book-card__progress-fill" style="width: 12%"></div>
-            </div>
-            <span class="shelf-book-card__progress-label">12%</span>
-          </footer>
-        </a>
-
-        <a class="shelf-book-card" href="index.html?book=cell">
-          <h2 class="shelf-book-card__title">战斗细胞：人类免疫系统奇妙之旅</h2>
-          <div class="shelf-book-card__cover-wrap">
-            <img class="shelf-book-card__cover" src="../book-card/%E3%80%8A%E6%88%98%E6%96%97%E7%BB%86%E8%83%9E%E3%80%8B.jpg" alt="《战斗细胞》封面" width="280" height="420">
-          </div>
-          <footer class="shelf-book-card__footer">
-            <div class="shelf-book-card__progress-track" aria-hidden="true">
-              <div class="shelf-book-card__progress-fill" style="width: 0%"></div>
-            </div>
-            <span class="shelf-book-card__progress-label">0%</span>
-          </footer>
-        </a>
-      </div>
+      <div class="shelf-grid" id="shelfBookGrid"></div>
     </main>
   </div>
+  <script src="mock-books.js"></script>
+  <script src="shelf-home.js"></script>
 </body>
 </html>

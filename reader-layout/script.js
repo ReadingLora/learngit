@@ -3,39 +3,31 @@
   var STORAGE_LEGACY = "reader-layout-notes-v1";
   var HINT_MS = 4000;
 
-  var KNOWN_BOOK_IDS = ["jzs", "fan", "cell"];
-  var BOOK_META = {
-    jzs: { title: "置身事内：中国政府与经济发展", shortTitle: "置身事内" },
-    fan: { title: "反脆弱：从不确定性中获益", shortTitle: "反脆弱" },
-    cell: { title: "战斗细胞：人类免疫系统奇妙之旅", shortTitle: "战斗细胞" }
-  };
+  var KNOWN_BOOK_IDS =
+    typeof READER_MOCK_BOOKS !== "undefined" && READER_MOCK_BOOKS.length
+      ? READER_MOCK_BOOKS.map(function (b) {
+          return b.id;
+        })
+      : ["jzs", "fan", "cell"];
 
-  function currentBookId() {
-    try {
-      var q = new URLSearchParams(window.location.search).get("book");
-      if (q && KNOWN_BOOK_IDS.indexOf(q) !== -1) return q;
-    } catch (e) {}
-    return null;
-  }
-
-  var bookId = currentBookId();
-  if (!bookId) {
-    window.location.replace("home.html");
-    return;
-  }
-
-  var ta = document.getElementById("aiMockAnswer");
-  var wrap = document.getElementById("aiMockAnswerWrap");
-  var actions = document.getElementById("aiMockActions");
-  var btnAdd = document.getElementById("btnAddNote");
-  var hintEl = document.getElementById("aiMockHint");
-  var badge = document.getElementById("aiSyncBadge");
-  var listEl = document.getElementById("notesList");
-  var topbarTitle = document.getElementById("topbarCurrentBookTitle");
-  var readerToolbarTitle = document.getElementById("readerToolbarTitle");
-
-  var lastSyncedSnapshot = null;
-  var hintTimer = null;
+  var BOOK_META = {};
+  (function buildBookMeta() {
+    if (typeof READER_MOCK_BOOKS === "undefined" || !READER_MOCK_BOOKS.length) {
+      BOOK_META = {
+        jzs: { title: "置身事内：中国政府与经济发展", shortTitle: "置身事内" },
+        fan: { title: "反脆弱：从不确定性中获益", shortTitle: "反脆弱" },
+        cell: { title: "战斗细胞：人类免疫系统奇妙之旅", shortTitle: "战斗细胞" }
+      };
+      return;
+    }
+    for (var bi = 0; bi < READER_MOCK_BOOKS.length; bi++) {
+      var row = READER_MOCK_BOOKS[bi];
+      BOOK_META[row.id] = {
+        title: row.title,
+        shortTitle: row.shortTitle || row.title
+      };
+    }
+  })();
 
   function blockText(block) {
     if (!block) return "";
@@ -97,6 +89,58 @@
   function saveStore(store) {
     localStorage.setItem(STORAGE_V2, JSON.stringify(store));
   }
+
+  function seedMockIfEmpty() {
+    if (typeof READER_MOCK_BOOKS === "undefined" || !Array.isArray(READER_MOCK_BOOKS)) return;
+    var store = loadStore();
+    var changed = false;
+    for (var si = 0; si < READER_MOCK_BOOKS.length; si++) {
+      var mockBook = READER_MOCK_BOOKS[si];
+      var bid = mockBook.id;
+      var existing = store.books[bid];
+      if (!Array.isArray(existing) || existing.length === 0) {
+        store.books[bid] = mockBook.blocks.map(function (blk) {
+          return {
+            id: blk.id,
+            type: blk.type,
+            content: blk.content,
+            createdAt: blk.createdAt
+          };
+        });
+        changed = true;
+      }
+    }
+    if (changed) saveStore(store);
+  }
+
+  seedMockIfEmpty();
+
+  function currentBookId() {
+    try {
+      var q = new URLSearchParams(window.location.search).get("book");
+      if (q && KNOWN_BOOK_IDS.indexOf(q) !== -1) return q;
+    } catch (e) {}
+    return null;
+  }
+
+  var bookId = currentBookId();
+  if (!bookId) {
+    window.location.replace("home.html");
+    return;
+  }
+
+  var ta = document.getElementById("aiMockAnswer");
+  var wrap = document.getElementById("aiMockAnswerWrap");
+  var actions = document.getElementById("aiMockActions");
+  var btnAdd = document.getElementById("btnAddNote");
+  var hintEl = document.getElementById("aiMockHint");
+  var badge = document.getElementById("aiSyncBadge");
+  var listEl = document.getElementById("notesList");
+  var topbarTitle = document.getElementById("topbarCurrentBookTitle");
+  var readerToolbarTitle = document.getElementById("readerToolbarTitle");
+
+  var lastSyncedSnapshot = null;
+  var hintTimer = null;
 
   function loadNotes() {
     var store = loadStore();
