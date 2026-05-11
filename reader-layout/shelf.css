@@ -148,7 +148,7 @@ body.shelf-page {
 }
 
 .shelf-grid {
-  --shelf-cover-h: min(20vh, 128px);
+  --shelf-cover-h: 28vh;
   display: flex;
   flex-wrap: wrap;
   gap: 14px 18px;
@@ -247,7 +247,7 @@ body.shelf-page {
   }
 
   .shelf-grid {
-    --shelf-cover-h: min(18vh, 112px);
+    --shelf-cover-h: 28vh;
   }
 
   .shelf-book-card {
