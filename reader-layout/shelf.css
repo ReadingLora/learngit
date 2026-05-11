@@ -151,6 +151,8 @@ body.shelf-page {
   /* 封面逻辑高度（vh）；书名略放大时封面略缩：用 --shelf-cover-display-h */
   --shelf-cover-h: 35vh;
   --shelf-cover-display-h: calc(var(--shelf-cover-h) - 12px);
+  /* 书名 / 封面 / 进度条共用内容列宽度（与封面宽一致） */
+  --shelf-content-w: calc(var(--shelf-cover-display-h) * 2 / 3);
   display: flex;
   flex-wrap: wrap;
   gap: 14px 18px;
@@ -158,14 +160,17 @@ body.shelf-page {
 }
 
 .shelf-book-card {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-decoration: none;
   color: inherit;
   flex: 0 0 auto;
-  /* 卡片总宽：封面宽 + 左右留白；加大「+ 32px」可继续加宽卡片 */
-  width: calc(var(--shelf-cover-display-h) * 2 / 3 + 32px);
+  /* 卡片总宽：内容列宽 + 左右 padding；加大「+ 48」可再加宽外圈白底 */
+  width: calc(var(--shelf-content-w) + 48px);
   max-width: 100%;
-  padding: 8px 10px 8px;
+  padding: 10px 16px 10px;
+  box-sizing: border-box;
   background: #fff;
   border: 1px solid #e0ddd4;
   border-radius: 10px;
@@ -185,6 +190,9 @@ body.shelf-page {
 
 .shelf-book-card__title {
   margin: 0 0 8px;
+  width: var(--shelf-content-w);
+  max-width: 100%;
+  box-sizing: border-box;
   /* 书名字号在此调 */
   font-size: 14px;
   font-weight: 700;
@@ -197,8 +205,10 @@ body.shelf-page {
 .shelf-book-card__cover-wrap {
   /* 封面实际高宽在此调（与 --shelf-cover-display-h 绑定） */
   height: var(--shelf-cover-display-h);
-  width: calc(var(--shelf-cover-display-h) * 2 / 3);
-  margin-inline: auto;
+  width: var(--shelf-content-w);
+  max-width: 100%;
+  box-sizing: border-box;
+  flex-shrink: 0;
   border-radius: 6px;
   overflow: hidden;
   background: #e8e6e1;
@@ -213,6 +223,9 @@ body.shelf-page {
 
 .shelf-book-card__footer {
   margin-top: 6px;
+  width: var(--shelf-content-w);
+  max-width: 100%;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 6px;
