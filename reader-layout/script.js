@@ -6,8 +6,8 @@
   var KNOWN_BOOK_IDS = ["jzs", "fan", "cell"];
   var BOOK_META = {
     jzs: { title: "置身事内：中国政府与经济发展", shortTitle: "置身事内" },
-    fan: { title: "反脆弱", shortTitle: "反脆弱" },
-    cell: { title: "战斗细胞", shortTitle: "战斗细胞" }
+    fan: { title: "反脆弱：从不确定性中获益", shortTitle: "反脆弱" },
+    cell: { title: "战斗细胞：人类免疫系统奇妙之旅", shortTitle: "战斗细胞" }
   };
 
   function currentBookId() {
@@ -15,10 +15,14 @@
       var q = new URLSearchParams(window.location.search).get("book");
       if (q && KNOWN_BOOK_IDS.indexOf(q) !== -1) return q;
     } catch (e) {}
-    return "jzs";
+    return null;
   }
 
   var bookId = currentBookId();
+  if (!bookId) {
+    window.location.replace("home.html");
+    return;
+  }
 
   var ta = document.getElementById("aiMockAnswer");
   var wrap = document.getElementById("aiMockAnswerWrap");
