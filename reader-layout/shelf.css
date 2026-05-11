@@ -169,7 +169,7 @@ body.shelf-page {
   /* 卡片总宽：内容列宽 + 左右 padding；加大「+ 48」可再加宽外圈白底 */
   width: calc(var(--shelf-content-w) + 48px);
   max-width: 100%;
-  padding: 10px 16px 10px;
+  padding: 10px;
   box-sizing: border-box;
   background: #fff;
   border: 1px solid #e0ddd4;
