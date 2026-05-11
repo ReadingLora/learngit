@@ -4,9 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>我的图书 · 阅读器</title>
+  <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="shelf.css">
 </head>
-<body>
+<body class="shelf-page">
+  <header class="app-topbar" role="banner">
+    <div class="app-topbar__left">
+      <span class="app-topbar__icon-slot shelf-topbar__home--here" title="书架首页" aria-current="page">⌂</span>
+      <nav class="app-topbar__tabs" aria-label="打开的书（占位）">
+        <span class="app-topbar__tab app-topbar__tab--active">书架</span>
+      </nav>
+    </div>
+    <div class="app-topbar__right">
+      <span class="app-topbar__icon-slot" title="通知（占位）">铃</span>
+      <span class="app-topbar__win" aria-hidden="true">
+        <span class="app-topbar__icon-slot app-topbar__icon-slot--win" title="最小化（占位）">—</span>
+        <span class="app-topbar__icon-slot app-topbar__icon-slot--win" title="最大化（占位）">□</span>
+        <span class="app-topbar__icon-slot app-topbar__icon-slot--win app-topbar__icon-slot--close" title="关闭（占位）">×</span>
+      </span>
+    </div>
+  </header>
+
   <div class="shelf-app">
     <aside class="shelf-sidebar" aria-label="导航">
       <input class="shelf-sidebar__search" type="search" placeholder="搜索（占位）" disabled aria-disabled="true">
@@ -17,6 +35,16 @@
           <li class="shelf-nav__item">未分类 <span class="shelf-nav__count">3</span></li>
         </ul>
       </nav>
+      <nav aria-label="功能入口（占位）">
+        <p class="shelf-nav__group-title">功能</p>
+        <ul class="shelf-nav__list">
+          <li class="shelf-nav__item shelf-nav__item--ghost" title="尚未实现">聊天</li>
+          <li class="shelf-nav__item shelf-nav__item--ghost" title="尚未实现">记忆</li>
+          <li class="shelf-nav__item shelf-nav__item--ghost" title="尚未实现">技能库</li>
+          <li class="shelf-nav__item shelf-nav__item--ghost" title="尚未实现">阅读统计</li>
+        </ul>
+      </nav>
+      <p class="shelf-nav__item shelf-nav__item--ghost shelf-sidebar__settings" title="尚未实现">设置</p>
       <p class="shelf-sidebar__hint">MVP1：三本书均可点进阅读页；笔记隔离以 URL 参数 <code>?book=</code> 为准，当前重点测「置身事内」5 条笔记。</p>
     </aside>
 
