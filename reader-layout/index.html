@@ -3,16 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>阅读器布局 · MVP2</title>
+  <title>阅读器 · 三栏</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="app-topbar" role="banner">
     <div class="app-topbar__left">
-      <span class="app-topbar__icon-slot" title="回首页（占位）">⌂</span>
-      <nav class="app-topbar__tabs" aria-label="书籍标签（占位）">
-        <span class="app-topbar__tab app-topbar__tab--active">占位书名 A</span>
-        <span class="app-topbar__tab">占位书名 B …</span>
+      <a class="app-topbar__icon-slot app-topbar__home-link" href="home.html" title="回书架首页">⌂</a>
+      <nav class="app-topbar__tabs" aria-label="当前书籍">
+        <span class="app-topbar__tab app-topbar__tab--active" id="topbarCurrentBookTitle">…</span>
       </nav>
     </div>
     <div class="app-topbar__right">
@@ -46,7 +45,7 @@
           <span class="toolbar__icon-slot">≡</span>
           <span class="toolbar__icon-slot">目</span>
         </div>
-        <span class="toolbar__title">占位章节标题</span>
+        <span class="toolbar__title" id="readerToolbarTitle">阅读区</span>
         <div class="toolbar__actions">
           <span class="toolbar__icon-slot">搜</span>
           <span class="toolbar__icon-slot">设</span>

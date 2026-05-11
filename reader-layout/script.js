@@ -1,6 +1,24 @@
 (function () {
-  var STORAGE_KEY = "reader-layout-notes-v1";
+  var STORAGE_V2 = "reader-layout-store-v2";
+  var STORAGE_LEGACY = "reader-layout-notes-v1";
   var HINT_MS = 4000;
+
+  var KNOWN_BOOK_IDS = ["jzs", "fan", "cell"];
+  var BOOK_META = {
+    jzs: { title: "置身事内：中国政府与经济发展", shortTitle: "置身事内" },
+    fan: { title: "反脆弱", shortTitle: "反脆弱" },
+    cell: { title: "战斗细胞", shortTitle: "战斗细胞" }
+  };
+
+  function currentBookId() {
+    try {
+      var q = new URLSearchParams(window.location.search).get("book");
+      if (q && KNOWN_BOOK_IDS.indexOf(q) !== -1) return q;
+    } catch (e) {}
+    return "jzs";
+  }
+
+  var bookId = currentBookId();
 
   var ta = document.getElementById("aiMockAnswer");
   var wrap = document.getElementById("aiMockAnswerWrap");
@@ -9,23 +27,92 @@
   var hintEl = document.getElementById("aiMockHint");
   var badge = document.getElementById("aiSyncBadge");
   var listEl = document.getElementById("notesList");
+  var topbarTitle = document.getElementById("topbarCurrentBookTitle");
+  var readerToolbarTitle = document.getElementById("readerToolbarTitle");
 
   var lastSyncedSnapshot = null;
   var hintTimer = null;
 
-  function loadNotes() {
+  function blockText(block) {
+    if (!block) return "";
+    if (typeof block.content === "string") return block.content;
+    if (typeof block.text === "string") return block.text;
+    return "";
+  }
+
+  function emptyStore() {
+    var books = {};
+    for (var i = 0; i < KNOWN_BOOK_IDS.length; i++) {
+      books[KNOWN_BOOK_IDS[i]] = [];
+    }
+    return { version: 2, books: books };
+  }
+
+  function loadStoreRaw() {
     try {
-      var raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return [];
-      var parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
+      var raw = localStorage.getItem(STORAGE_V2);
+      if (!raw) return null;
+      var o = JSON.parse(raw);
+      if (!o || o.version !== 2 || typeof o.books !== "object") return null;
+      return o;
     } catch (e) {
-      return [];
+      return null;
     }
   }
 
+  function migrateLegacyIfNeeded() {
+    try {
+      var oldRaw = localStorage.getItem(STORAGE_LEGACY);
+      if (!oldRaw) return null;
+      var parsed = JSON.parse(oldRaw);
+      if (!Array.isArray(parsed)) return null;
+      var store = emptyStore();
+      store.books.jzs = parsed.map(function (n) {
+        return {
+          id: n.id != null ? n.id : Date.now(),
+          type: "ai_mock",
+          content: typeof n.text === "string" ? n.text : String(n.content || ""),
+          createdAt: typeof n.createdAt === "number" ? n.createdAt : Date.now()
+        };
+      });
+      localStorage.setItem(STORAGE_V2, JSON.stringify(store));
+      return store;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function loadStore() {
+    var s = loadStoreRaw();
+    if (s) return s;
+    s = migrateLegacyIfNeeded();
+    if (s) return s;
+    return emptyStore();
+  }
+
+  function saveStore(store) {
+    localStorage.setItem(STORAGE_V2, JSON.stringify(store));
+  }
+
+  function loadNotes() {
+    var store = loadStore();
+    var arr = store.books[bookId];
+    return Array.isArray(arr) ? arr : [];
+  }
+
   function saveNotes(notes) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+    var store = loadStore();
+    store.books[bookId] = notes;
+    saveStore(store);
+  }
+
+  function applyBookToChrome() {
+    var meta = BOOK_META[bookId];
+    if (meta) {
+      if (topbarTitle) topbarTitle.textContent = meta.shortTitle;
+      if (readerToolbarTitle) readerToolbarTitle.textContent = meta.title;
+      document.title = meta.shortTitle + " · 阅读器";
+    }
   }
 
   function firstLineTitle(text) {
@@ -37,7 +124,6 @@
     return "(空白)";
   }
 
-  /** 展开区只显示「标题行之后」的正文，避免与标题重复 */
   function restAfterTitleLine(text) {
     var lines = String(text).split("\n");
     var i = 0;
@@ -98,6 +184,7 @@
 
     for (var i = 0; i < notes.length; i++) {
       var n = notes[i];
+      var bodyText = blockText(n);
       var art = document.createElement("article");
       art.className = "note-card";
       art.dataset.id = String(n.id);
@@ -111,14 +198,14 @@
       chev.setAttribute("aria-hidden", "true");
       var titleSpan = document.createElement("span");
       titleSpan.className = "note-card__title-text";
-      titleSpan.textContent = firstLineTitle(n.text);
+      titleSpan.textContent = firstLineTitle(bodyText);
       head.appendChild(chev);
       head.appendChild(titleSpan);
 
       var body = document.createElement("div");
       body.className = "note-card__body";
       body.hidden = true;
-      body.textContent = restAfterTitleLine(n.text);
+      body.textContent = restAfterTitleLine(bodyText);
 
       art.appendChild(head);
       art.appendChild(body);
@@ -147,7 +234,7 @@
 
     var notes = loadNotes();
     var dup = notes.some(function (n) {
-      return String(n.text).trim() === text;
+      return String(blockText(n)).trim() === text;
     });
     if (dup) {
       showHint("已存在相同笔记");
@@ -156,7 +243,8 @@
 
     notes.push({
       id: Date.now(),
-      text: text,
+      type: "ai_mock",
+      content: text,
       createdAt: Date.now()
     });
     saveNotes(notes);
@@ -164,6 +252,8 @@
     setSyncedUI(true);
     renderNotes();
   }
+
+  applyBookToChrome();
 
   if (ta) {
     ta.addEventListener("input", function () {

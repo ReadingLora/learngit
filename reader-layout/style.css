@@ -111,6 +111,18 @@ body {
   font-size: 16px;
 }
 
+/* 顶栏：回书架 */
+.app-topbar__home-link {
+  text-decoration: none;
+  color: inherit;
+  border-style: solid;
+  border-color: #b8b8b8;
+}
+
+.app-topbar__home-link:hover {
+  background: #f0f0f0;
+}
+
 /* 顶栏右侧：笔记侧栏切换（Obsidian 式方框 + 右竖条，宽窄表示状态） */
 .topbar-icon-btn {
   display: flex;
