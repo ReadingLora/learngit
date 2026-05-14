@@ -1,5 +1,5 @@
 /**
- * 阅读器原型：三本书 + 每本 5 条 Block（与 Week3 计划「模拟数据」一致）。
+ * 阅读器原型：模拟书架数据；前两本各 5 条 Block，《战斗细胞》默认 0 条（便于测无笔记）。
  * 由 script.js 在「该书笔记为空」时写入 localStorage，不覆盖已有数据。
  */
 var READER_MOCK_BOOKS = [
@@ -92,37 +92,7 @@ var READER_MOCK_BOOKS = [
     coverSrc:
       "../book-card/%E3%80%8A%E6%88%98%E6%96%97%E7%BB%86%E8%83%9E%E3%80%8B.jpg",
     progressPercent: 0,
-    blocks: [
-      {
-        id: 103001,
-        type: "quote",
-        content: "摘录 · 先天免疫\n巨噬细胞像巡逻兵：吞噬、呈递抗原、释放信号分子。",
-        createdAt: 1715500800000
-      },
-      {
-        id: 103002,
-        type: "ai_mock",
-        content: "术语卡（模拟）\n抗体：B 细胞分化出的浆细胞分泌的 Y 形蛋白，可特异性结合抗原。",
-        createdAt: 1715587200000
-      },
-      {
-        id: 103003,
-        type: "question",
-        content: "问题\n过敏是免疫系统「过度反应」——那调节性 T 细胞扮演什么角色？",
-        createdAt: 1715673600000
-      },
-      {
-        id: 103004,
-        type: "quote",
-        content: "摘录 · 适应性免疫\nT 细胞与 B 细胞协同，形成记忆，为二次感染做准备。",
-        createdAt: 1715760000000
-      },
-      {
-        id: 103005,
-        type: "note",
-        content: "随想\n把免疫当作「分布式系统」：信号、阈值、负反馈同样关键。",
-        createdAt: 1715846400000
-      }
-    ]
+    /* 默认无 Mock 块：便于测试「无笔记」列表与导出；需要时可在阅读页用 ?clearCellNotes=1 清空本机已写入的 cell 笔记 */
+    blocks: []
   }
 ];

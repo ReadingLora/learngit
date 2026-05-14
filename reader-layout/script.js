@@ -14,9 +14,21 @@
   (function buildBookMeta() {
     if (typeof READER_MOCK_BOOKS === "undefined" || !READER_MOCK_BOOKS.length) {
       BOOK_META = {
-        jzs: { title: "置身事内：中国政府与经济发展", shortTitle: "置身事内" },
-        fan: { title: "反脆弱：从不确定性中获益", shortTitle: "反脆弱" },
-        cell: { title: "战斗细胞：人类免疫系统奇妙之旅", shortTitle: "战斗细胞" }
+        jzs: {
+          title: "置身事内：中国政府与经济发展",
+          shortTitle: "置身事内",
+          author: "兰小欢"
+        },
+        fan: {
+          title: "反脆弱：从不确定性中获益",
+          shortTitle: "反脆弱",
+          author: "纳西姆·尼古拉斯·塔勒布"
+        },
+        cell: {
+          title: "战斗细胞：人体免疫系统中的奇妙之旅",
+          shortTitle: "战斗细胞",
+          author: "菲利普·德特默"
+        }
       };
       return;
     }
@@ -24,7 +36,8 @@
       var row = READER_MOCK_BOOKS[bi];
       BOOK_META[row.id] = {
         title: row.title,
-        shortTitle: row.shortTitle || row.title
+        shortTitle: row.shortTitle || row.title,
+        author: typeof row.author === "string" ? row.author : ""
       };
     }
   })();
@@ -90,6 +103,20 @@
     localStorage.setItem(STORAGE_V2, JSON.stringify(store));
   }
 
+  /** 一次性：URL 带 clearCellNotes=1 时清空《战斗细胞》(cell) 的笔记并去掉该参数，便于测试无笔记状态 */
+  function applyClearCellNotesQuery() {
+    try {
+      var sp = new URLSearchParams(window.location.search);
+      if (sp.get("clearCellNotes") !== "1") return;
+      var store = loadStore();
+      store.books.cell = [];
+      saveStore(store);
+      sp.delete("clearCellNotes");
+      var qs = sp.toString();
+      window.history.replaceState(null, "", window.location.pathname + (qs ? "?" + qs : "") + window.location.hash);
+    } catch (e) {}
+  }
+
   function seedMockIfEmpty() {
     if (typeof READER_MOCK_BOOKS === "undefined" || !Array.isArray(READER_MOCK_BOOKS)) return;
     var store = loadStore();
@@ -129,6 +156,8 @@
     return;
   }
 
+  applyClearCellNotesQuery();
+
   var ta = document.getElementById("aiMockAnswer");
   var wrap = document.getElementById("aiMockAnswerWrap");
   var actions = document.getElementById("aiMockActions");
@@ -138,6 +167,10 @@
   var listEl = document.getElementById("notesList");
   var topbarTitle = document.getElementById("topbarCurrentBookTitle");
   var readerToolbarTitle = document.getElementById("readerToolbarTitle");
+  var btnExportMd = document.getElementById("btnExportMarkdown");
+  var exportModal = document.getElementById("exportMarkdownModal");
+  var exportTextarea = document.getElementById("exportMarkdownTextarea");
+  var btnExportModalClose = document.getElementById("btnExportModalClose");
 
   var lastSyncedSnapshot = null;
   var hintTimer = null;
@@ -178,6 +211,48 @@
     while (i < lines.length && lines[i].trim() === "") i++;
     if (i >= lines.length) return "";
     return lines.slice(i + 1).join("\n");
+  }
+
+  function buildExportMarkdown() {
+    var meta = BOOK_META[bookId] || {};
+    var bookTitle = typeof meta.title === "string" ? meta.title : "";
+    var author = typeof meta.author === "string" ? meta.author.trim() : "";
+    var lines = [];
+    lines.push("# " + (bookTitle || "未命名书籍"));
+    lines.push("");
+    lines.push(author ? "作者：" + author : "作者：—");
+    lines.push("");
+
+    var notes = loadNotes();
+    if (!notes.length) {
+      lines.push("_（暂无笔记）_");
+      return lines.join("\n");
+    }
+
+    var chunks = [];
+    for (var ni = 0; ni < notes.length; ni++) {
+      var raw = String(blockText(notes[ni])).trim();
+      var head = firstLineTitle(raw);
+      var body = restAfterTitleLine(raw).trim();
+      chunks.push("## " + head + "\n\n" + body);
+    }
+    lines.push(chunks.join("\n\n"));
+    return lines.join("\n");
+  }
+
+  function setExportModalOpen(open) {
+    if (!exportModal) return;
+    exportModal.hidden = !open;
+    if (open) {
+      if (exportTextarea) {
+        exportTextarea.value = buildExportMarkdown();
+        exportTextarea.focus();
+        exportTextarea.select();
+      }
+      document.body.classList.add("export-md-modal--open");
+    } else {
+      document.body.classList.remove("export-md-modal--open");
+    }
   }
 
   function clearHintTimer() {
@@ -314,6 +389,30 @@
   if (btnAdd) btnAdd.addEventListener("click", onAddNote);
 
   if (listEl) listEl.addEventListener("click", onNotesListClick);
+
+  if (btnExportMd) {
+    btnExportMd.addEventListener("click", function () {
+      setExportModalOpen(true);
+    });
+  }
+  if (btnExportModalClose) {
+    btnExportModalClose.addEventListener("click", function () {
+      setExportModalOpen(false);
+    });
+  }
+  if (exportModal) {
+    var backdrop = exportModal.querySelector(".export-md-modal__backdrop");
+    if (backdrop) {
+      backdrop.addEventListener("click", function () {
+        setExportModalOpen(false);
+      });
+    }
+    document.addEventListener("keydown", function (e) {
+      if (exportModal.hidden || e.key !== "Escape") return;
+      e.preventDefault();
+      setExportModalOpen(false);
+    });
+  }
 
   updateActionsVisibility();
   updateSyncFromInput();

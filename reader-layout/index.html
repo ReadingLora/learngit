@@ -18,6 +18,34 @@
       <span class="app-topbar__icon-slot" title="通知（占位）">铃</span>
       <button
         type="button"
+        class="topbar-icon-btn topbar-reader-toggle"
+        id="btnReaderToggle"
+        aria-expanded="true"
+        aria-controls="panelReader"
+        aria-label="收起阅读区"
+        title="切换阅读区"
+      >
+        <svg class="reader-toggle-svg" viewBox="0 0 18 18" width="18" height="18" aria-hidden="true">
+          <rect class="reader-toggle-frame" x="2.25" y="2.25" width="13.5" height="13.5" rx="1.75" />
+          <rect class="reader-toggle-bar" x="2.25" y="3.75" width="3.75" height="10.5" rx="0.45" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        class="topbar-icon-btn topbar-ai-toggle"
+        id="btnAiToggle"
+        aria-expanded="true"
+        aria-controls="panelAi"
+        aria-label="收起 AI 问答区"
+        title="切换 AI 问答区"
+      >
+        <svg class="ai-toggle-svg" viewBox="0 0 18 18" width="18" height="18" aria-hidden="true">
+          <rect class="ai-toggle-frame" x="2.25" y="2.25" width="13.5" height="13.5" rx="1.75" />
+          <rect class="ai-toggle-bar" x="7.125" y="3.75" width="3.75" height="10.5" rx="0.45" />
+        </svg>
+      </button>
+      <button
+        type="button"
         class="topbar-icon-btn topbar-notes-toggle"
         id="btnNotesToggle"
         aria-expanded="true"
@@ -96,7 +124,7 @@
             <span class="toolbar__icon-slot ai-mock-actions__icon" title="赞（占位）">▲</span>
             <span class="toolbar__icon-slot ai-mock-actions__icon" title="踩（占位）">▼</span>
           </div>
-          <button type="button" class="ai-mock-actions__add" id="btnAddNote">加入笔记</button>
+          <button type="button" class="reader-btn--primary ai-mock-actions__add" id="btnAddNote">加入笔记</button>
           <span class="ai-mock-hint" id="aiMockHint" role="status" aria-live="polite"></span>
         </div>
       </div>
@@ -125,11 +153,42 @@
     <section class="panel panel--notes" id="notesPanel" aria-label="笔记区">
       <header class="panel__toolbar">
         <span class="toolbar__title toolbar__title--left">笔记</span>
+        <div class="toolbar__actions">
+          <button type="button" class="reader-btn--primary notes-toolbar-export" id="btnExportMarkdown" title="导出当前书的笔记为 Markdown">
+            导出
+          </button>
+        </div>
       </header>
       <div class="panel__body panel__body--notes">
         <div id="notesList" class="notes-list" aria-label="笔记列表"></div>
       </div>
     </section>
+  </div>
+
+  <div id="exportMarkdownModal" class="export-md-modal" hidden>
+    <div class="export-md-modal__backdrop" tabindex="-1" aria-hidden="true"></div>
+    <div
+      class="export-md-modal__dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="exportMdModalTitle"
+    >
+      <div class="export-md-modal__head">
+        <h2 id="exportMdModalTitle" class="export-md-modal__title">导出 Markdown</h2>
+        <button type="button" class="export-md-modal__close" id="btnExportModalClose" aria-label="关闭">
+          ×
+        </button>
+      </div>
+      <p class="export-md-modal__hint">请全选下方文本（Ctrl+A 或 ⌘+A）并复制，粘贴到 Obsidian 测试库等编辑器中。</p>
+      <textarea
+        id="exportMarkdownTextarea"
+        class="export-md-modal__textarea"
+        readonly
+        rows="18"
+        spellcheck="false"
+        aria-label="导出的 Markdown 全文"
+      ></textarea>
+    </div>
   </div>
 
   <script>
@@ -146,26 +205,90 @@
       var elNotes = document.getElementById("notesPanel");
       var g0 = document.getElementById("gutterReaderAi");
       var g1 = document.getElementById("gutterAiNotes");
-      var btn = document.getElementById("btnNotesToggle");
+      var btnReader = document.getElementById("btnReaderToggle");
+      var btnAi = document.getElementById("btnAiToggle");
+      var btnNotes = document.getElementById("btnNotesToggle");
 
       var f = [0.4, 0.3, 0.3];
       var drag = null;
 
+      function readerCollapsed() {
+        return body.classList.contains("reader-collapsed");
+      }
+
+      function aiCollapsed() {
+        return body.classList.contains("ai-collapsed");
+      }
+
       function notesCollapsed() {
         return body.classList.contains("notes-collapsed");
+      }
+
+      function panelOpenReader() {
+        return !readerCollapsed();
+      }
+
+      function panelOpenAi() {
+        return !aiCollapsed();
+      }
+
+      function panelOpenNotes() {
+        return !notesCollapsed();
+      }
+
+      function gutter0Visible() {
+        var r = panelOpenReader();
+        var a = panelOpenAi();
+        var n = panelOpenNotes();
+        if (!r) return false;
+        if (a) return true;
+        return n;
+      }
+
+      function gutter1Visible() {
+        var a = panelOpenAi();
+        var n = panelOpenNotes();
+        return a && n;
       }
 
       function clamp(v, lo, hi) {
         return Math.min(hi, Math.max(lo, v));
       }
 
+      /** 两栏分宽时若某一侧比例为 0（刚从单栏状态过来），避免另一侧吃满整宽、这一侧只剩 MIN */
+      function normalizePairRA() {
+        if (f[0] <= 1e-6 || f[1] <= 1e-6 || f[0] + f[1] <= 1e-6) {
+          f[0] = 0.5;
+          f[1] = 0.5;
+        }
+      }
+
+      function normalizePairRN() {
+        if (f[0] <= 1e-6 || f[2] <= 1e-6 || f[0] + f[2] <= 1e-6) {
+          f[0] = 0.5;
+          f[2] = 0.5;
+        }
+      }
+
+      function normalizePairAN() {
+        if (f[1] <= 1e-6 || f[2] <= 1e-6 || f[1] + f[2] <= 1e-6) {
+          f[1] = 0.5;
+          f[2] = 0.5;
+        }
+      }
+
       function usableWidth() {
         if (!shell) return 0;
-        var g = notesCollapsed() ? 1 : 2;
-        return Math.max(0, shell.clientWidth - g * GUTTER);
+        var n = 0;
+        if (gutter0Visible()) n++;
+        if (gutter1Visible()) n++;
+        return Math.max(0, shell.clientWidth - n * GUTTER);
       }
 
       function layoutExpanded(u) {
+        elReader.style.minWidth = "";
+        elAi.style.minWidth = "";
+        elNotes.style.minWidth = "";
         var s = f[0] + f[1] + f[2];
         if (s <= 0) s = 1;
         var wR = (u * f[0]) / s;
@@ -190,7 +313,31 @@
         elReader.style.flex = "0 0 " + wR + "px";
         elAi.style.flex = "0 0 " + wA + "px";
         elNotes.style.flex = "0 0 " + wN + "px";
-        elNotes.style.minWidth = "";
+      }
+
+      function applyGutters() {
+        var g0v = gutter0Visible();
+        var g1v = gutter1Visible();
+        if (g0) {
+          g0.style.display = g0v ? "" : "none";
+          g0.style.flex = g0v ? "0 0 " + GUTTER + "px" : "0 0 0px";
+          if (g0v) {
+            if (panelOpenAi() && panelOpenNotes()) {
+              g0.setAttribute("aria-label", "拖动调整阅读区与 AI 区宽度");
+              g0.title = "拖动调整阅读区与 AI 区宽度";
+            } else if (!panelOpenAi() && panelOpenNotes()) {
+              g0.setAttribute("aria-label", "拖动调整阅读区与笔记区宽度");
+              g0.title = "拖动调整阅读区与笔记区宽度";
+            } else {
+              g0.setAttribute("aria-label", "拖动调整阅读区与 AI 区宽度");
+              g0.title = "拖动调整阅读区与 AI 区宽度";
+            }
+          }
+        }
+        if (g1) {
+          g1.style.display = g1v ? "" : "none";
+          g1.style.flex = g1v ? "0 0 " + GUTTER + "px" : "0 0 0px";
+        }
       }
 
       function layout() {
@@ -198,58 +345,205 @@
         var u = usableWidth();
         if (u <= 0) return;
 
-        if (g0) g0.style.flex = "0 0 " + GUTTER + "px";
+        var r = panelOpenReader();
+        var a = panelOpenAi();
+        var n = panelOpenNotes();
 
-        if (notesCollapsed()) {
-          if (g1) {
-            g1.style.display = "none";
-            g1.style.flex = "0 0 0px";
+        elReader.style.minWidth = "";
+        elAi.style.minWidth = "";
+        elNotes.style.minWidth = "";
+
+        applyGutters();
+
+        if (r && a && n) {
+          if (f[0] <= 1e-6 || f[1] <= 1e-6 || f[2] <= 1e-6) {
+            f[0] = 0.4;
+            f[1] = 0.3;
+            f[2] = 0.3;
           }
+          layoutExpanded(u);
+          return;
+        }
+
+        if (r && a && !n) {
           elNotes.style.minWidth = "0";
-          var sum = f[0] + f[1];
-          var fr = sum > 0 ? f[0] / sum : 4 / 7;
+          normalizePairRA();
+          var sumRA = f[0] + f[1];
+          var fr = sumRA > 0 ? f[0] / sumRA : 4 / 7;
           var wR = u * fr;
           var wA = u - wR;
           wR = clamp(wR, MIN_R, u - MIN_A);
           wA = u - wR;
           f[0] = wR / u;
           f[1] = wA / u;
+          f[2] = 0;
           elReader.style.flex = "0 0 " + wR + "px";
           elAi.style.flex = "0 0 " + wA + "px";
           elNotes.style.flex = "0 0 0px";
-        } else {
-          if (g1) g1.style.display = "";
-          if (g1) g1.style.flex = "0 0 " + GUTTER + "px";
-          layoutExpanded(u);
+          return;
         }
+
+        if (r && !a && n) {
+          elAi.style.minWidth = "0";
+          normalizePairRN();
+          var sumRN = f[0] + f[2];
+          if (sumRN <= 0) sumRN = 1;
+          var wR2 = (u * f[0]) / sumRN;
+          var wN2 = u - wR2;
+          wR2 = clamp(wR2, MIN_R, u - MIN_N);
+          wN2 = u - wR2;
+          f[0] = wR2 / u;
+          f[2] = wN2 / u;
+          f[1] = 0;
+          elReader.style.flex = "0 0 " + wR2 + "px";
+          elAi.style.flex = "0 0 0px";
+          elNotes.style.flex = "0 0 " + wN2 + "px";
+          return;
+        }
+
+        if (!r && a && n) {
+          elReader.style.minWidth = "0";
+          normalizePairAN();
+          var sumAN = f[1] + f[2];
+          if (sumAN <= 0) sumAN = 1;
+          var wA3 = (u * f[1]) / sumAN;
+          var wN3 = u - wA3;
+          wA3 = clamp(wA3, MIN_A, u - MIN_N);
+          wN3 = u - wA3;
+          f[1] = wA3 / u;
+          f[2] = wN3 / u;
+          f[0] = 0;
+          elReader.style.flex = "0 0 0px";
+          elAi.style.flex = "0 0 " + wA3 + "px";
+          elNotes.style.flex = "0 0 " + wN3 + "px";
+          return;
+        }
+
+        if (r && !a && !n) {
+          elReader.style.flex = "0 0 " + u + "px";
+          elAi.style.flex = "0 0 0px";
+          elNotes.style.flex = "0 0 0px";
+          f[0] = 1;
+          f[1] = 0;
+          f[2] = 0;
+          return;
+        }
+
+        if (!r && a && !n) {
+          elReader.style.flex = "0 0 0px";
+          elAi.style.flex = "0 0 " + u + "px";
+          elNotes.style.flex = "0 0 0px";
+          f[0] = 0;
+          f[1] = 1;
+          f[2] = 0;
+          return;
+        }
+
+        if (!r && !a && n) {
+          elReader.style.flex = "0 0 0px";
+          elAi.style.flex = "0 0 0px";
+          elNotes.style.flex = "0 0 " + u + "px";
+          f[0] = 0;
+          f[1] = 0;
+          f[2] = 1;
+          return;
+        }
+
+        layoutExpanded(u);
       }
 
-      function setCollapsed(collapsed) {
-        body.classList.toggle("notes-collapsed", collapsed);
-        if (btn) {
-          btn.setAttribute("aria-expanded", collapsed ? "false" : "true");
-          btn.setAttribute("aria-label", collapsed ? "展开笔记区" : "收起笔记区");
-          btn.title = collapsed ? "展开笔记侧栏" : "收起笔记侧栏";
+      function setReaderCollapsed(collapsed) {
+        body.classList.toggle("reader-collapsed", collapsed);
+        if (btnReader) {
+          btnReader.setAttribute("aria-expanded", collapsed ? "false" : "true");
+          btnReader.setAttribute("aria-label", collapsed ? "展开阅读区" : "收起阅读区");
+          btnReader.title = collapsed ? "展开阅读区" : "收起阅读区";
         }
         layout();
       }
 
+      function setAiCollapsed(collapsed) {
+        body.classList.toggle("ai-collapsed", collapsed);
+        if (btnAi) {
+          btnAi.setAttribute("aria-expanded", collapsed ? "false" : "true");
+          btnAi.setAttribute("aria-label", collapsed ? "展开 AI 问答区" : "收起 AI 问答区");
+          btnAi.title = collapsed ? "展开 AI 问答区" : "收起 AI 问答区";
+        }
+        layout();
+      }
+
+      function setNotesCollapsed(collapsed) {
+        body.classList.toggle("notes-collapsed", collapsed);
+        if (btnNotes) {
+          btnNotes.setAttribute("aria-expanded", collapsed ? "false" : "true");
+          btnNotes.setAttribute("aria-label", collapsed ? "展开笔记区" : "收起笔记区");
+          btnNotes.title = collapsed ? "展开笔记侧栏" : "收起笔记侧栏";
+        }
+        layout();
+      }
+
+      function tryToggleReader() {
+        if (readerCollapsed()) {
+          setReaderCollapsed(false);
+          return;
+        }
+        if (aiCollapsed() && notesCollapsed()) return;
+        setReaderCollapsed(true);
+      }
+
+      function tryToggleAi() {
+        if (aiCollapsed()) {
+          setAiCollapsed(false);
+          return;
+        }
+        if (readerCollapsed() && notesCollapsed()) return;
+        setAiCollapsed(true);
+      }
+
+      function tryToggleNotes() {
+        if (notesCollapsed()) {
+          setNotesCollapsed(false);
+          return;
+        }
+        if (readerCollapsed() && aiCollapsed()) return;
+        setNotesCollapsed(true);
+      }
+
       function startDrag(which, e) {
-        if (which === 1 && notesCollapsed()) return;
         e.preventDefault();
+        var r = panelOpenReader();
+        var a = panelOpenAi();
+        var n = panelOpenNotes();
         var u = usableWidth();
-        var wR = elReader.getBoundingClientRect().width;
-        var wA = elAi.getBoundingClientRect().width;
-        var wN = notesCollapsed() ? 0 : elNotes.getBoundingClientRect().width;
-        drag = {
-          which: which,
-          startX: e.clientX,
-          u: u,
-          collapsed: notesCollapsed(),
-          wR: wR,
-          wA: wA,
-          wN: wN
-        };
+
+        if (which === 0) {
+          if (!gutter0Visible()) return;
+          var wR = elReader.getBoundingClientRect().width;
+          var wA = elAi.getBoundingClientRect().width;
+          var wN = elNotes.getBoundingClientRect().width;
+          if (r && a && n) {
+            drag = { which: 0, mode: "ran", u: u, wR: wR, wA: wA, wN: wN, startX: e.clientX };
+          } else if (r && a && !n) {
+            drag = { which: 0, mode: "ra", u: u, wR: wR, wA: wA, startX: e.clientX };
+          } else if (r && !a && n) {
+            drag = { which: 0, mode: "rn", u: u, wR: wR, wN: wN, startX: e.clientX };
+          } else {
+            return;
+          }
+        } else {
+          if (!gutter1Visible()) return;
+          var wR2 = elReader.getBoundingClientRect().width;
+          var wA2 = elAi.getBoundingClientRect().width;
+          var wN2 = elNotes.getBoundingClientRect().width;
+          if (!r && a && n) {
+            drag = { which: 1, mode: "an", u: u, wA: wA2, wN: wN2, startX: e.clientX };
+          } else if (r && a && n) {
+            drag = { which: 1, mode: "ran", u: u, wR: wR2, wA: wA2, wN: wN2, startX: e.clientX };
+          } else {
+            return;
+          }
+        }
+
         body.classList.add("is-resizing");
       }
 
@@ -258,7 +552,7 @@
         var dx = e.clientX - drag.startX;
         var u = usableWidth();
 
-        if (drag.collapsed) {
+        if (drag.mode === "ra") {
           var wR = drag.wR + dx;
           wR = clamp(wR, MIN_R, u - MIN_A);
           var wA = u - wR;
@@ -266,26 +560,58 @@
           f[1] = wA / u;
           elReader.style.flex = "0 0 " + wR + "px";
           elAi.style.flex = "0 0 " + wA + "px";
-        } else if (drag.which === 0) {
-          var wR2 = drag.wR + dx;
-          wR2 = clamp(wR2, MIN_R, u - MIN_A - drag.wN);
-          var wA2 = u - drag.wN - wR2;
-          f[0] = wR2 / u;
-          f[1] = wA2 / u;
-          f[2] = drag.wN / u;
-          elReader.style.flex = "0 0 " + wR2 + "px";
-          elAi.style.flex = "0 0 " + wA2 + "px";
-          elNotes.style.flex = "0 0 " + drag.wN + "px";
-        } else {
-          var wA3 = drag.wA + dx;
-          wA3 = clamp(wA3, MIN_A, u - drag.wR - MIN_N);
-          var wN3 = u - drag.wR - wA3;
-          f[0] = drag.wR / u;
-          f[1] = wA3 / u;
+          return;
+        }
+
+        if (drag.mode === "rn") {
+          var wR3 = drag.wR + dx;
+          wR3 = clamp(wR3, MIN_R, u - MIN_N);
+          var wN3 = u - wR3;
+          f[0] = wR3 / u;
           f[2] = wN3 / u;
-          elReader.style.flex = "0 0 " + drag.wR + "px";
-          elAi.style.flex = "0 0 " + wA3 + "px";
+          f[1] = 0;
+          elReader.style.flex = "0 0 " + wR3 + "px";
+          elAi.style.flex = "0 0 0px";
           elNotes.style.flex = "0 0 " + wN3 + "px";
+          return;
+        }
+
+        if (drag.mode === "an") {
+          var wA4 = drag.wA + dx;
+          wA4 = clamp(wA4, MIN_A, u - MIN_N);
+          var wN4 = u - wA4;
+          f[1] = wA4 / u;
+          f[2] = wN4 / u;
+          f[0] = 0;
+          elReader.style.flex = "0 0 0px";
+          elAi.style.flex = "0 0 " + wA4 + "px";
+          elNotes.style.flex = "0 0 " + wN4 + "px";
+          return;
+        }
+
+        if (drag.mode === "ran" && drag.which === 0) {
+          var wR5 = drag.wR + dx;
+          wR5 = clamp(wR5, MIN_R, u - MIN_A - drag.wN);
+          var wA5 = u - drag.wN - wR5;
+          f[0] = wR5 / u;
+          f[1] = wA5 / u;
+          f[2] = drag.wN / u;
+          elReader.style.flex = "0 0 " + wR5 + "px";
+          elAi.style.flex = "0 0 " + wA5 + "px";
+          elNotes.style.flex = "0 0 " + drag.wN + "px";
+          return;
+        }
+
+        if (drag.mode === "ran" && drag.which === 1) {
+          var wA6 = drag.wA + dx;
+          wA6 = clamp(wA6, MIN_A, u - drag.wR - MIN_N);
+          var wN6 = u - drag.wR - wA6;
+          f[0] = drag.wR / u;
+          f[1] = wA6 / u;
+          f[2] = wN6 / u;
+          elReader.style.flex = "0 0 " + drag.wR + "px";
+          elAi.style.flex = "0 0 " + wA6 + "px";
+          elNotes.style.flex = "0 0 " + wN6 + "px";
         }
       }
 
@@ -296,15 +622,21 @@
         layout();
       }
 
-      if (btn) {
-        btn.addEventListener("click", function () {
-          setCollapsed(!notesCollapsed());
-        });
+      if (btnReader) {
+        btnReader.addEventListener("click", tryToggleReader);
+      }
+      if (btnAi) {
+        btnAi.addEventListener("click", tryToggleAi);
+      }
+      if (btnNotes) {
+        btnNotes.addEventListener("click", tryToggleNotes);
       }
 
-      if (g0) g0.addEventListener("mousedown", function (e) {
-        startDrag(0, e);
-      });
+      if (g0) {
+        g0.addEventListener("mousedown", function (e) {
+          startDrag(0, e);
+        });
+      }
       if (g1) {
         g1.addEventListener("mousedown", function (e) {
           startDrag(1, e);
