@@ -103,6 +103,16 @@
     localStorage.setItem(STORAGE_V2, JSON.stringify(store));
   }
 
+  function createBlock(type, content) {
+    var now = Date.now();
+    return {
+      id: now,
+      type: type,
+      content: content,
+      createdAt: now
+    };
+  }
+
   /** 一次性：URL 带 clearCellNotes=1 时清空《战斗细胞》(cell) 的笔记并去掉该参数，便于测试无笔记状态 */
   function applyClearCellNotesQuery() {
     try {
@@ -364,12 +374,7 @@
       return;
     }
 
-    notes.push({
-      id: Date.now(),
-      type: "ai_mock",
-      content: text,
-      createdAt: Date.now()
-    });
+    notes.push(createBlock("ai_mock", text));
     saveNotes(notes);
     lastSyncedSnapshot = text;
     setSyncedUI(true);
